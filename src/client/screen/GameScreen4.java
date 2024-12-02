@@ -144,6 +144,7 @@ public class GameScreen4 extends GameScreen {
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 
+		listenForBroadcasts();
 		loadComments();
 	}
 
@@ -153,15 +154,7 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject("EXIT_GAME");
 				out.flush();
 
-				// 서버 응답 처리
-				String response = (String) in.readObject();
-				if ("EXIT_GAME_SUCCESS".equals(response)) {
-					_thisUser.setCurrentGameId(null);
-					frame.dispose();
-					new GameScreen2(out, in, "Game List", _thisUser, _gameList, _userList).showScreen();
-				} else {
-					JOptionPane.showMessageDialog(frame, "뒤로 가기 실패", "오류", JOptionPane.ERROR_MESSAGE);
-				}
+				_thisUser.setCurrentGameId(null);
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "뒤로 가기 처리 중 오류 발생", "오류", JOptionPane.ERROR_MESSAGE);
@@ -176,19 +169,8 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject(currentGame.getGameId());
 				out.flush();
 
-				String response = (String) in.readObject();
-				if ("LIKE_SUCCESS".equals(response)) {
-					// 게임 추천 수 증가 후 UI 업데이트
-					currentGame.like();  // 게임의 추천 수 증가
-					updateLikeLabel();  // 추천 수 레이블 업데이트
-
-					listenForBroadcasts();
-					loadComments();
-				}
-
-//				// 게임 추천 수 증가 후 UI 업데이트
-//				currentGame.like();  // 게임의 추천 수 증가
-//				updateLikeLabel();  // 추천 수 레이블 업데이트
+				currentGame.like();  // 게임의 추천 수 증가
+				updateLikeLabel();  // 추천 수 레이블 업데이트
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "추천 처리 중 오류 발생");
@@ -293,13 +275,7 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject(currentGame.getGameId());
 				out.writeObject(content);
 				out.flush();
-
-				String response = (String) in.readObject();
-				if ("CHAT_SUCCESS".equals(response)) {
-					commentInput.setText("");
-					listenForBroadcasts();
-					loadComments();
-				}
+				commentInput.setText("");
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "댓글 작성 중 오류 발생");
@@ -317,12 +293,7 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject(candidateNumber);
 				out.flush();
 
-				String response = (String) in.readObject();
-				if ("VOTE_SUCCESS".equals(response)) {
-					_thisUser.addPlayedGameId(currentGame.getGameId());
-					listenForBroadcasts();
-					loadComments();
-				}
+				_thisUser.addPlayedGameId(currentGame.getGameId());
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "투표 중 오류 발생");
@@ -423,12 +394,6 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject(currentGame.getGameId());
 				out.writeObject(commentId);
 				out.flush();
-
-				String response = (String) in.readObject();
-				if ("LIKE_CHAT_SUCCESS".equals(response)) {
-					listenForBroadcasts();
-					commentInput.setText("");
-				}
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "좋아요 처리 중 오류 발생");
@@ -439,16 +404,18 @@ public class GameScreen4 extends GameScreen {
 	private void listenForBroadcasts() {
 		new Thread(() -> {
 			try {
-				String messageType = (String) in.readObject(); // 데이터 유형 태그 읽기
-				System.out.println("messageType = " + messageType);
-				if ("BROADCAST_INFO".equals(messageType)) {
-					// 브로드캐스트 처리
-					Game updatedGame = (Game) in.readObject();
-					updateGame(updatedGame);
-				} else {
-					// 그 외는 명령 응답 처리
-					String response = messageType; // 메시지 타입 자체가 응답 메시지
-					processResponse(response);
+				while (true) {
+					String messageType = (String) in.readObject(); // 데이터 유형 태그 읽기
+					System.out.println("messageType = " + messageType);
+					if ("BROADCAST_INFO".equals(messageType)) {
+						// 브로드캐스트 처리
+						Game updatedGame = (Game) in.readObject();
+						updateGame(updatedGame);
+					} else {
+						// 그 외는 명령 응답 처리
+						String response = messageType; // 메시지 타입 자체가 응답 메시지
+						processResponse(response);
+					}
 				}
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(frame, "브로드캐스트 수신 중 오류 발생");
@@ -485,6 +452,10 @@ public class GameScreen4 extends GameScreen {
 				case "LIKE_FAIL":
 					JOptionPane.showMessageDialog(frame, "추천 실패. 오류가 발생했습니다.");
 					break;
+				case "EXIT_GAME_SUCCESS":
+					frame.dispose();
+					new GameScreen2(out, in, "Game List", _thisUser, _gameList, _userList).showScreen();
+						break;
 				default:
 					JOptionPane.showMessageDialog(frame, "알 수 없는 응답: " + response);
 			}

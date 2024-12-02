@@ -271,9 +271,9 @@ public class ClientHandler extends Thread {
 
         synchronized (output) {
             sendResponse("LIKE_SUCCESS");
-            broadcastGameDetails(gameId);
+//            broadcastGameDetails(gameId);
         }
-//        broadcastGameDetails(gameId);
+        broadcastGameDetails(gameId);
     }
 
     private void handleVote() throws IOException, ClassNotFoundException {
@@ -295,9 +295,9 @@ public class ClientHandler extends Thread {
 
         synchronized (output) {
             sendResponse("VOTE_SUCCESS");
-            broadcastGameDetails(gameId);
+//            broadcastGameDetails(gameId);
         }
-//        broadcastGameDetails(gameId);
+        broadcastGameDetails(gameId);
     }
 
     private void handleChat() throws IOException, ClassNotFoundException {
@@ -315,9 +315,8 @@ public class ClientHandler extends Thread {
 
         synchronized (output) {
             sendResponse("CHAT_SUCCESS");
-            broadcastGameDetails(gameId);
         }
-//        broadcastGameDetails(gameId);
+        broadcastGameDetails(gameId);
     }
 
     private void handleLikeChat() throws IOException, ClassNotFoundException {
@@ -337,9 +336,8 @@ public class ClientHandler extends Thread {
 
         synchronized (output) {
             sendResponse("LIKE_CHAT_SUCCESS");
-            broadcastGameDetails(gameId);
         }
-//        broadcastGameDetails(gameId);
+        broadcastGameDetails(gameId);
     }
 
     private void handleInvalidCommand(String action) throws IOException {
