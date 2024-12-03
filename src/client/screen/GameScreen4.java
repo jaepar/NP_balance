@@ -167,6 +167,9 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject("LIKE");
 				out.writeObject(currentGame.getGameId());
 				out.flush();
+
+				currentGame.like();  // 게임의 추천 수 증가
+				updateLikeLabel();  // 추천 수 레이블 업데이트
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "추천 처리 중 오류 발생");
@@ -246,9 +249,11 @@ public class GameScreen4 extends GameScreen {
 					candidatePanel.add(createCandidatePanel(currentGame.getCandidate1(), 1));
 					candidatePanel.add(createCandidatePanel(currentGame.getCandidate2(), 2));
 
+					candidatePanel.invalidate();
 					candidatePanel.revalidate();
 					candidatePanel.repaint();
 
+					updateLikeLabel();
 					loadComments();
 					System.out.println("UI updated successfully for game: " + currentGame.getGameId());
 				}
@@ -271,6 +276,8 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject(currentGame.getGameId());
 				out.writeObject(content);
 				out.flush();
+
+				commentInput.setText("");
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "댓글 작성 중 오류 발생");
@@ -287,6 +294,8 @@ public class GameScreen4 extends GameScreen {
 				out.writeObject(currentGame.getGameId());
 				out.writeObject(candidateNumber);
 				out.flush();
+
+				_thisUser.addPlayedGameId(currentGame.getGameId());
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "투표 중 오류 발생");
@@ -402,7 +411,7 @@ public class GameScreen4 extends GameScreen {
 					if ("BROADCAST_INFO".equals(messageType)) {
 						// 브로드캐스트 처리
 						Game updatedGame = (Game) in.readObject();
-						updateGame(updatedGame);
+						SwingUtilities.invokeLater(() -> updateGame(updatedGame));
 					} else if("EXIT_GAME_SUCCESS".equals(messageType)){
 						_thisUser.setCurrentGameId(null);
 						isStopped = true;
@@ -429,23 +438,23 @@ public class GameScreen4 extends GameScreen {
 			switch (response) {
 				case "CHAT_SUCCESS":
 					JOptionPane.showMessageDialog(frame, "댓글 작성 성공!");
-					commentInput.setText("");
+//					commentInput.setText("");
 					loadComments();
 					break;
 				case "LIKE_CHAT_SUCCESS":
 					JOptionPane.showMessageDialog(frame, "댓글 좋아요 성공!");
-					commentInput.setText("");
+//					commentInput.setText("");
 					break;
 				case "VOTE_SUCCESS":
 					JOptionPane.showMessageDialog(frame, "투표 성공!");
-					_thisUser.addPlayedGameId(currentGame.getGameId());
+//					_thisUser.addPlayedGameId(currentGame.getGameId());
 					loadComments();
 					break;
 				case "LIKE_SUCCESS":
 					JOptionPane.showMessageDialog(frame, "좋아요 성공!");
 					// 게임 추천 수 증가 후 UI 업데이트
-					currentGame.like();  // 게임의 추천 수 증가
-					updateLikeLabel();  // 추천 수 레이블 업데이트
+//					currentGame.like();  // 게임의 추천 수 증가
+//					updateLikeLabel();  // 추천 수 레이블 업데이트
 					loadComments();
 					break;
 				case "CHAT_FAIL":
@@ -462,6 +471,7 @@ public class GameScreen4 extends GameScreen {
 					break;
 				case "EXIT_GAME_FAIL":
 					JOptionPane.showMessageDialog(frame, "뒤로 가기 실패", "오류", JOptionPane.ERROR_MESSAGE);
+					_thisUser.setCurrentGameId(null);
 					break;
 				default:
 					JOptionPane.showMessageDialog(frame, "알 수 없는 응답: " + response);
